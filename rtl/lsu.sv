@@ -27,10 +27,10 @@ module lsu #(
 
 
     // Signal which controls the 4 memory block write enables
-    reg [NUM_MEM_BLOCKS-1:0] memory_bank_we_output;
     reg [DATA_WIDTH-1:0] data_input_internal;
-    reg [DATA_WIDTH-1:0] data_output_ram_internal;
     reg [DATA_WIDTH-1:0] data_output_internal;
+    reg [NUM_MEM_BLOCKS-1:0] memory_bank_we;
+    wire [DATA_WIDTH-1:0] data_output_ram_internal;
 
     // Instatiating the RAM
     ram #(
@@ -40,15 +40,15 @@ module lsu #(
         .ADDRESS_SPACE(ADDRESS_SPACE)
     ) ram_ip (
         .clk(clk),
-        .addr_i(addr_i),
+        .addr_i(addr_in),
         .wr_data_i(data_input_internal),
-        .mem_block_en_i(memory_bank_we_output),
+        .mem_block_en_i(memory_bank_we),
         .wr_en_i(WE_in),
         .rd_data_o(data_output_ram_internal)
     );
 
     //Reset Logic
-    always_ff @(posedge clk) begin
+    always @(*) begin
         if(!reset_n) begin
             data_out <= '0;
         end else begin
@@ -57,113 +57,112 @@ module lsu #(
     end
 
     // Determining which membanks to write to and how to write to them
-    reg [$clog2(NUM_MEM_BLOCKS)-1:0] membank_number = addr_in[0+:$clog2(NUM_MEM_BLOCKS)-1];
-    reg [NUM_MEM_BLOCKS-1:0] memory_bank_we;
-    always @(membank_number, dtypes_in) begin
+    wire [$clog2(NUM_MEM_BLOCKS)-1:0] membank_number;
+    assign membank_number = addr_in[1:0];
+    always @(membank_number, dtypes_in, data_output_ram_internal, data_in) begin
         case(dtypes_in)
             `BYTE               : begin
                 // Setting the Write Enable Correctly
-                memory_bank_we[(membank_number+0)] <= 1'b1;
-                memory_bank_we[(membank_number+1)] <= 1'b0;
-                memory_bank_we[(membank_number+2)] <= 1'b0;
-                memory_bank_we[(membank_number+3)] <= 1'b0;
+                memory_bank_we[((membank_number+0)%4)] <= 1'b1;
+                memory_bank_we[((membank_number+1)%4)] <= 1'b0;
+                memory_bank_we[((membank_number+2)%4)] <= 1'b0;
+                memory_bank_we[((membank_number+3)%4)] <= 1'b0;
 
                 // Writing the Data Correctly
-                data_input_internal[(membank_number+0)*8+:8] <= data_in[7:0];
-                data_input_internal[(membank_number+1)*8+:8] <= 8'd0;
-                data_input_internal[(membank_number+2)*8+:8] <= 8'd0;
-                data_input_internal[(membank_number+3)*8+:8] <= 8'd0;
+                data_input_internal[((membank_number+0)%4)*8+:8] <= data_in[7:0];
+                data_input_internal[((membank_number+1)%4)*8+:8] <= 8'd0;
+                data_input_internal[((membank_number+2)%4)*8+:8] <= 8'd0;
+                data_input_internal[((membank_number+3)%4)*8+:8] <= 8'd0;
 
                 // Reading the Data Correctly
-                data_output_internal[0+:8]         <= data_output_ram_internal[(membank_number+0)*8+:8];
-                data_output_internal[DATA_WIDTH:8] <= {24{data_output_ram_internal[7]}};
+                data_output_internal[0+:8]           <= data_output_ram_internal[((membank_number+0)%4)*8+:8];
+                data_output_internal[DATA_WIDTH-1:8] <= {24{data_output_ram_internal[(((membank_number+0)%4)*8) + 7]}};
             end
             `HALF_WORD          : begin
                 // Setting the Write Enable Correctly
-                memory_bank_we[(membank_number+0)] <= 1'b1;
-                memory_bank_we[(membank_number+1)] <= 1'b1;
-                memory_bank_we[(membank_number+2)] <= 1'b0;
-                memory_bank_we[(membank_number+3)] <= 1'b0;
+                memory_bank_we[((membank_number+0)%4)] <= 1'b1;
+                memory_bank_we[((membank_number+1)%4)] <= 1'b1;
+                memory_bank_we[((membank_number+2)%4)] <= 1'b0;
+                memory_bank_we[((membank_number+3)%4)] <= 1'b0;
 
                 // Writing the Data Correctly
-                data_input_internal[(membank_number+0)*8+:8] <= data_in[7:0];
-                data_input_internal[(membank_number+1)*8+:8] <= data_in[15:8];
-                data_input_internal[(membank_number+2)*8+:8] <= 8'd0;
-                data_input_internal[(membank_number+3)*8+:8] <= 8'd0;
+                data_input_internal[((membank_number+0)%4)*8+:8] <= data_in[7:0];
+                data_input_internal[((membank_number+1)%4)*8+:8] <= data_in[15:8];
+                data_input_internal[((membank_number+2)%4)*8+:8] <= 8'd0;
+                data_input_internal[((membank_number+3)%4)*8+:8] <= 8'd0;
 
                 // Reading the Data Correctly
-                data_output_internal[0+:8]          <= data_output_ram_internal[(membank_number+0)*8+:8];
-                data_output_internal[8+:8]          <= data_output_ram_internal[(membank_number+1)*8+:8];
-                data_output_internal[DATA_WIDTH:16] <= {16{data_output_ram_internal[7]}};
+                data_output_internal[0+:8]          <= data_output_ram_internal[((membank_number+0)%4)*8+:8];
+                data_output_internal[8+:8]          <= data_output_ram_internal[((membank_number+1)%4)*8+:8];
+                data_output_internal[DATA_WIDTH-1:16] <= {16{data_output_ram_internal[(((membank_number+1)%4)*8) + 7]}};
             end
             `FULL_WORD          : begin
                 // Setting the Write Enable Correctly
                 memory_bank_we <= 4'b1111;
 
                 // Writing the Data Correctly
-                data_input_internal[(membank_number+0)*8+:8] <= data_in[7:0];
-                data_input_internal[(membank_number+1)*8+:8] <= data_in[15:8];
-                data_input_internal[(membank_number+2)*8+:8] <= data_in[23:16];
-                data_input_internal[(membank_number+3)*8+:8] <= data_in[31:24];
+                data_input_internal[((membank_number+0)%4)*8+:8] <= data_in[7:0];
+                data_input_internal[((membank_number+1)%4)*8+:8] <= data_in[15:8];
+                data_input_internal[((membank_number+2)%4)*8+:8] <= data_in[23:16];
+                data_input_internal[((membank_number+3)%4)*8+:8] <= data_in[31:24];
 
                 // Reading the Data Correctly
-                data_output_internal[0+:8]          <= data_output_ram_internal[(membank_number+0)*8+:8];
-                data_output_internal[8+:8]          <= data_output_ram_internal[(membank_number+1)*8+:8];
-                data_output_internal[16+:8]         <= data_output_ram_internal[(membank_number+2)*8+:8];
-                data_output_internal[24+:8]         <= data_output_ram_internal[(membank_number+3)*8+:8];
+                data_output_internal[0+:8]          <= data_output_ram_internal[((membank_number+0)%4)*8+:8];
+                data_output_internal[8+:8]          <= data_output_ram_internal[((membank_number+1)%4)*8+:8];
+                data_output_internal[16+:8]         <= data_output_ram_internal[((membank_number+2)%4)*8+:8];
+                data_output_internal[24+:8]         <= data_output_ram_internal[((membank_number+3)%4)*8+:8];
             end
             `BYTE_UNSIGNED      : begin
                 // Setting the Write Enable Correctly
-                memory_bank_we[(membank_number+0)] <= 1'b1;
-                memory_bank_we[(membank_number+1)] <= 1'b0;
-                memory_bank_we[(membank_number+2)] <= 1'b0;
-                memory_bank_we[(membank_number+3)] <= 1'b0;
+                memory_bank_we[((membank_number+0)%4)] <= 1'b1;
+                memory_bank_we[((membank_number+1)%4)] <= 1'b0;
+                memory_bank_we[((membank_number+2)%4)] <= 1'b0;
+                memory_bank_we[((membank_number+3)%4)] <= 1'b0;
 
                 // Writing the Data Correctly
-                data_input_internal[(membank_number+0)*8+:8] <= data_in[7:0];
-                data_input_internal[(membank_number+1)*8+:8] <= 8'd0;
-                data_input_internal[(membank_number+2)*8+:8] <= 8'd0;
-                data_input_internal[(membank_number+3)*8+:8] <= 8'd0;
+                data_input_internal[((membank_number+0)%4)*8+:8] <= data_in[7:0];
+                data_input_internal[((membank_number+1)%4)*8+:8] <= 8'd0;
+                data_input_internal[((membank_number+2)%4)*8+:8] <= 8'd0;
+                data_input_internal[((membank_number+3)%4)*8+:8] <= 8'd0;
 
                 // Reading the Data Correctly
-                data_output_internal[0+:8]          <= data_output_ram_internal[(membank_number+0)*8+:8];
-                data_output_internal[DATA_WIDTH:8] <= '0;
+                data_output_internal[0+:8]           <= data_output_ram_internal[((membank_number+0)%4)*8+:8];
+                data_output_internal[DATA_WIDTH-1:8] <= '0;
             end
             `HALF_WORD_UNSIGNED : begin
                 // Setting the Write Enable Correctly
-                memory_bank_we[(membank_number+0)] <= 1'b1;
-                memory_bank_we[(membank_number+1)] <= 1'b1;
-                memory_bank_we[(membank_number+2)] <= 1'b0;
-                memory_bank_we[(membank_number+3)] <= 1'b0;
+                memory_bank_we[((membank_number+0)%4)] <= 1'b1;
+                memory_bank_we[((membank_number+1)%4)] <= 1'b1;
+                memory_bank_we[((membank_number+2)%4)] <= 1'b0;
+                memory_bank_we[((membank_number+3)%4)] <= 1'b0;
 
                 // Writing the Data Correctly
-                data_input_internal[(membank_number+0)*8+:8] <= data_in[7:0];
-                data_input_internal[(membank_number+1)*8+:8] <= data_in[15:8];
-                data_input_internal[(membank_number+2)*8+:8] <= 8'd0;
-                data_input_internal[(membank_number+3)*8+:8] <= 8'd0;
+                data_input_internal[((membank_number+0)%4)*8+:8] <= data_in[7:0];
+                data_input_internal[((membank_number+1)%4)*8+:8] <= data_in[15:8];
+                data_input_internal[((membank_number+2)%4)*8+:8] <= 8'd0;
+                data_input_internal[((membank_number+3)%4)*8+:8] <= 8'd0;
 
                 // Reading the Data Correctly
-                data_output_internal[0+:8]          <= data_output_ram_internal[(membank_number+0)*8+:8];
-                data_output_internal[8+:8]          <= data_output_ram_internal[(membank_number+1)*8+:8];
-                data_output_internal[DATA_WIDTH:16] <= '0;
+                data_output_internal[0+:8]          <= data_output_ram_internal[((membank_number+0)%4)*8+:8];
+                data_output_internal[8+:8]          <= data_output_ram_internal[((membank_number+1)%4)*8+:8];
+                data_output_internal[DATA_WIDTH-1:16] <= '0;
             end
             default             : begin
                 // Setting the Write Enable Correctly
-                memory_bank_we[(membank_number+0)] <= 1'b0;
-                memory_bank_we[(membank_number+1)] <= 1'b0;
-                memory_bank_we[(membank_number+2)] <= 1'b0;
-                memory_bank_we[(membank_number+3)] <= 1'b0;
+                memory_bank_we[((membank_number+0)%4)] <= 1'b0;
+                memory_bank_we[((membank_number+1)%4)] <= 1'b0;
+                memory_bank_we[((membank_number+2)%4)] <= 1'b0;
+                memory_bank_we[((membank_number+3)%4)] <= 1'b0;
 
                 // Writing the Data Correctly
-                data_input_internal[(membank_number+0)*8+:8] <= 8'd0;
-                data_input_internal[(membank_number+1)*8+:8] <= 8'd0;
-                data_input_internal[(membank_number+2)*8+:8] <= 8'd0;
-                data_input_internal[(membank_number+3)*8+:8] <= 8'd0;
+                data_input_internal[((membank_number+0)%4)*8+:8] <= 8'd0;
+                data_input_internal[((membank_number+1)%4)*8+:8] <= 8'd0;
+                data_input_internal[((membank_number+2)%4)*8+:8] <= 8'd0;
+                data_input_internal[((membank_number+3)%4)*8+:8] <= 8'd0;
 
                 // Reading the Data Correctly
-                data_output_internal[DATA_WIDTH:0] <= '0;
+                data_output_internal[DATA_WIDTH-1:0] <= '0;
             end
         endcase   
     end
-
 endmodule

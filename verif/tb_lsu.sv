@@ -56,7 +56,7 @@ module tb_lsu #(
             addr = addr_input;
             data_in = '0;
             dtypes = dtypes_input;
-            we_in = 1'b0;
+            we_in = 1'b0;   
             #15
             we_in = 1'b0;
         end
@@ -82,7 +82,7 @@ module tb_lsu #(
         // Waiting 100 ns, then negating reset
         #100 reset_n = 1'b1;
 
-        // Waiting 100 ns, then writing a full word to addr 10
+        // Waiting 100 ns, then writing four words
         #100
         write_data(12'h000, 32'hABCDEF00, `FULL_WORD);
         write_data(12'h004, 32'h00000010, `FULL_WORD);
@@ -93,6 +93,54 @@ module tb_lsu #(
         read_data(12'h004, `FULL_WORD);
         read_data(12'h008, `FULL_WORD);
         read_data(12'h00C, `FULL_WORD);
+
+        // Waiting 100 ns, then writing four halfwords
+        #100
+        write_data(12'h010, 32'h0000ABCD, `HALF_WORD);
+        write_data(12'h012, 32'h0000FFFF, `HALF_WORD);
+        write_data(12'h014, 32'h00001010, `HALF_WORD);
+        write_data(12'h018, 32'h00001001, `HALF_WORD);
+        #100
+        read_data(12'h010, `HALF_WORD);
+        read_data(12'h012, `HALF_WORD);
+        read_data(12'h014, `HALF_WORD);
+        read_data(12'h018, `HALF_WORD);
+
+        // Waiting 100 ns, then writing four bytes
+        #100
+        write_data(12'h01A, 32'h000000AB, `BYTE);
+        write_data(12'h01B, 32'h000000CB, `BYTE);
+        write_data(12'h01C, 32'h000000EF, `BYTE);
+        write_data(12'h01D, 32'h00000011, `BYTE);
+        #100
+        read_data(12'h01A, `BYTE);
+        read_data(12'h01B, `BYTE);
+        read_data(12'h01C, `BYTE);
+        read_data(12'h01D, `BYTE);
+
+        // Waiting 100 ns, then writing four unsigned halfwords
+        #100
+        write_data(12'h010, 32'h0000ABCD, `HALF_WORD_UNSIGNED);
+        write_data(12'h012, 32'h0000FFFF, `HALF_WORD_UNSIGNED);
+        write_data(12'h014, 32'h00001010, `HALF_WORD_UNSIGNED);
+        write_data(12'h018, 32'h00001001, `HALF_WORD_UNSIGNED);
+        #100
+        read_data(12'h010, `HALF_WORD_UNSIGNED);
+        read_data(12'h012, `HALF_WORD_UNSIGNED);
+        read_data(12'h014, `HALF_WORD_UNSIGNED);
+        read_data(12'h018, `HALF_WORD_UNSIGNED);
+
+        // Waiting 100 ns, then writing four unsigned bytes
+        #100
+        write_data(12'h01A, 32'h000000AB, `BYTE_UNSIGNED);
+        write_data(12'h01B, 32'h000000CB, `BYTE_UNSIGNED);
+        write_data(12'h01C, 32'h000000EF, `BYTE_UNSIGNED);
+        write_data(12'h01D, 32'h00000011, `BYTE_UNSIGNED);
+        #100
+        read_data(12'h01A, `BYTE_UNSIGNED);
+        read_data(12'h01B, `BYTE_UNSIGNED);
+        read_data(12'h01C, `BYTE_UNSIGNED);
+        read_data(12'h01D, `BYTE_UNSIGNED);
         #100 $finish;
     end
 endmodule;
