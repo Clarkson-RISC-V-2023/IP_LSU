@@ -126,7 +126,7 @@ module lsu #(
                 data_input_internal[((membank_number+3)%4)*8+:8] <= 8'd0;
 
                 // Reading the Data Correctly
-                data_output_internal[0+:8]           <= data_output_ram_internal[((membank_number+1)%4)*8+:8];
+                data_output_internal[0+:8]           <= data_output_ram_internal[((membank_number+0)%4)*8+:8];
                 data_output_internal[DATA_WIDTH-1:8] <= '0;
             end
             `HALF_WORD_UNSIGNED : begin
