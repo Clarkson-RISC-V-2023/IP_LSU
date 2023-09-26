@@ -1,4 +1,4 @@
-.PHONY: all clean
+.PHONY: all clean rclean
 
 
 # File Constants
@@ -24,10 +24,10 @@ VLOG_CC_OPTIONS = --sv -nolog
 VLOG_FILE = xvlog.pb
 # Executable Constants (ELAB)
 ELAB_CC = xelab
-ELAB_CC_OPTIONS = -debug typical -nolog
+ELAB_CC_OPTIONS = -debug typical
 # Executable Constants (SIM)
 SIM_CC = xsim
-SIM_CC_OPTIONS = -R -nolog
+SIM_CC_OPTIONS = -R 
 
 all: $(VCD)
 
@@ -44,9 +44,13 @@ $(XELAB_OUTPUT): $(LSU_TB_OUTPUT)
 	cd $(PWD)$(TMP) && $(ELAB_CC) $(ELAB_CC_OPTIONS) $(LSU_TB_FILE)
 
 $(VCD): $(XELAB_OUTPUT)
-	cd $(PWD)$(TMP) && $(SIM_CC) $(SIM_CC_OPTIONS) $(LSU_TB_FILE)
-	mv $(VCD) ../$(VCD)
+	cd $(PWD)$(TMP) && $(SIM_CC) $(LSU_TB_FILE) $(SIM_CC_OPTIONS) 
+	mv $(TMP)$(VCD) ./$(VCD)
 
 clean:
 	rm -rf $(TMP)
+	rm -rf $(XSIM_DIR)
+	rm -rf *.pb *.log *.jou *.wdb
 
+rclean: clean
+	rm -rf *.vcd
