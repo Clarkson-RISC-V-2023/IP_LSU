@@ -31,7 +31,7 @@ SIM_CC_OPTIONS = -R
 
 all: $(VCD)
 
-$(LSU_TB_OUTPUT): $(LSU) $(LSU_TB) $(RAM MEM)
+$(VCD): $(LSU) $(LSU_TB) $(RAM MEM)
 	# Building the xsim.dir, Directory
 	$(VLOG_CC) $(VLOG_CC_OPTIONS) $(LSU) $(LSU_TB) $(RAM) $(MEM)
 
@@ -40,10 +40,8 @@ $(LSU_TB_OUTPUT): $(LSU) $(LSU_TB) $(RAM MEM)
 	mv $(XSIM_DIR) $(TMP)$(XSIM_DIR)
 	mv $(VLOG_FILE) $(TMP)$(VLOG_FILE)
 
-$(XELAB_OUTPUT): $(LSU_TB_OUTPUT)
 	cd $(PWD)$(TMP) && $(ELAB_CC) $(ELAB_CC_OPTIONS) $(LSU_TB_FILE)
 
-$(VCD): $(XELAB_OUTPUT)
 	cd $(PWD)$(TMP) && $(SIM_CC) $(LSU_TB_FILE) $(SIM_CC_OPTIONS) 
 	mv $(TMP)$(VCD) ./$(VCD)
 
