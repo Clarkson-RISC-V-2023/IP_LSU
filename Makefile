@@ -7,15 +7,15 @@ VERIF = ./verif/
 LSU = $(RTL)lsu.sv
 LSU_TB_FILE = tb_lsu
 LSU_TB = $(VERIF)$(LSU_TB_FILE).sv
-RAM = ../IP_RAM/rtl/ram.sv
-MEM = ../IP_RAM/rtl/memblock.sv
-LSU_TB_OUTPUT = $(TMP)$(XSIM_DIR)work/$(LSU_TB_FILE).sdb
-XELAB_OUTPUT = $(TMP)$(XSIM_DIR)work.$(LSU_TB_FILE)/xsim.dbg
+RAM = ../mem/rtl/ram.sv
+MEM = ../mem/rtl/memblock.sv
+LSU_TB_OUTPUT = $(OUT_DIR)$(XSIM_DIR)work/$(LSU_TB_FILE).sdb
+XELAB_OUTPUT = $(OUT_DIR)$(XSIM_DIR)work.$(LSU_TB_FILE)/xsim.dbg
 PWD = $(shell pwd)/
 VCD = $(LSU_TB_FILE).vcd
 
 # Directory Constants
-TMP = ./TmpFiles/
+OUT_DIR = ./OUT_DIRFiles/
 XSIM_DIR = ./xsim.dir/
 
 # Executable Constants (VLOG)
@@ -36,17 +36,16 @@ $(VCD): $(LSU) $(LSU_TB) $(RAM MEM)
 	$(VLOG_CC) $(VLOG_CC_OPTIONS) $(LSU) $(LSU_TB) $(RAM) $(MEM)
 
 	# Moving the files into a temporary directory
-	mkdir -p $(TMP)
-	mv $(XSIM_DIR) $(TMP)$(XSIM_DIR)
-	mv $(VLOG_FILE) $(TMP)$(VLOG_FILE)
+	mkdir -p $(OUT_DIR)
+	mv $(XSIM_DIR) $(OUT_DIR)$(XSIM_DIR)
+	mv $(VLOG_FILE) $(OUT_DIR)$(VLOG_FILE)
 
-	cd $(PWD)$(TMP) && $(ELAB_CC) $(ELAB_CC_OPTIONS) $(LSU_TB_FILE)
+	cd $(PWD)$(OUT_DIR) && $(ELAB_CC) $(ELAB_CC_OPTIONS) $(LSU_TB_FILE)
 
-	cd $(PWD)$(TMP) && $(SIM_CC) $(LSU_TB_FILE) $(SIM_CC_OPTIONS) 
-	mv $(TMP)$(VCD) ./$(VCD)
+	cd $(PWD)$(OUT_DIR) && $(SIM_CC) $(LSU_TB_FILE) $(SIM_CC_OPTIONS) 
 
 clean:
-	rm -rf $(TMP)
+	rm -rf $(OUT_DIR)
 	rm -rf $(XSIM_DIR)
 	rm -rf *.pb *.log *.jou *.wdb
 
