@@ -5,7 +5,9 @@ module lsu #(
     parameter DEPTH = 1024,
     parameter NUM_MEM_BLOCKS = 4,
     parameter ADDRESS_SPACE = 4096, // DEPTH * NUM_MEM_BLOCKS
-    parameter NUM_DATA_TYPES = 6
+    parameter NUM_DATA_TYPES = 6,
+    parameter GPIO_A_ADDR = 12'hEF0,
+    parameter GPIO_B_ADDR = 12'hEF4
 )(
     // Inputs
     input wire clk,
@@ -16,7 +18,11 @@ module lsu #(
     input wire reset_n,
  
     // Outputs
-    output reg [DATA_WIDTH-1:0] data_out
+    output reg [DATA_WIDTH-1:0] data_out,
+
+    // In Outs
+    output reg [DATA_WIDTH-1:0] gpioA_out,
+    output reg [DATA_WIDTH-1:0] gpioB_out
 );
     // Defining the different DTYPES
     `define BYTE               3'b000
@@ -53,6 +59,21 @@ module lsu #(
             data_out <= '0;
         end else begin
             data_out <= data_output_internal;
+        end
+    end
+
+    // Determining When to Write to GPIO
+    always_ff @(posedge clk) begin
+        if(!reset_n) begin
+            gpioA_out <= '0;
+            gpioB_out <= '0;
+        end else begin
+            if(WE_in) begin
+            case(addr_in)
+                GPIO_A_ADDR: gpioA_out <= data_in;
+                GPIO_B_ADDR: gpioB_out <= data_in;
+            endcase
+        end
         end
     end
 
