@@ -2,7 +2,9 @@
 module tb_lsu #(
     parameter ADDRESS_SPACE = 4096,
     parameter DATA_WIDTH = 32,
-    parameter NUM_DATA_TYPES = 6
+    parameter NUM_DATA_TYPES = 6,
+    parameter GPIO_A_ADDR = 12'hEF0,
+    parameter GPIO_B_ADDR = 12'hEF4
 )(
     // EMPTY
 );
@@ -21,12 +23,16 @@ module tb_lsu #(
     reg [$clog2(NUM_DATA_TYPES)-1:0] dtypes;
     reg reset_n;
     reg [DATA_WIDTH-1:0] data_out;
+    reg [DATA_WIDTH-1:0] gpioA_out;
+    reg [DATA_WIDTH-1:0] gpioB_out;
 
     // Instatiating the LSU
     lsu #(
         .DATA_WIDTH(DATA_WIDTH),
         .ADDRESS_SPACE(ADDRESS_SPACE),
-        .NUM_DATA_TYPES(NUM_DATA_TYPES)
+        .NUM_DATA_TYPES(NUM_DATA_TYPES),
+        .GPIO_A_ADDR(GPIO_A_ADDR),
+        .GPIO_B_ADDR(GPIO_B_ADDR)
     ) lsu_dut (
         .clk(clk),
         .addr_in(addr),
@@ -34,7 +40,9 @@ module tb_lsu #(
         .WE_in(we_in),
         .dtypes_in(dtypes),
         .reset_n(reset_n),
-        .data_out(data_out)
+        .data_out(data_out),
+        .gpioA_out(gpioA_out),
+        .gpioB_out(gpioB_out)
     );
 
     // Functions
@@ -129,6 +137,11 @@ module tb_lsu #(
         read_data(12'h012, `HALF_WORD_UNSIGNED);
         read_data(12'h014, `HALF_WORD_UNSIGNED);
         read_data(12'h018, `HALF_WORD_UNSIGNED);
+
+        // Writing to GPIO A and GPIO B
+        #100
+        write_data(GPIO_A_ADDR, 32'h000000AB, `FULL_WORD);
+        write_data(GPIO_B_ADDR, 32'h000000AB, `FULL_WORD);
 
         // Waiting 100 ns, then writing four unsigned bytes
         #100
