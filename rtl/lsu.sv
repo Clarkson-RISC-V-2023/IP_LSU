@@ -39,18 +39,13 @@ module lsu #(
     wire [DATA_WIDTH-1:0] data_output_ram_internal;
 
     // Instatiating the RAM
-    ram #(
-        .DATA_WIDTH(DATA_WIDTH),
-        .DEPTH(DEPTH),
-        .NUM_OF_MEM_BLOCKS(NUM_MEM_BLOCKS),
-        .ADDRESS_SPACE(ADDRESS_SPACE)
-    ) ram_ip (
+    ram ram_ip (
         .clk(clk),
         .addr_i(addr_in),
-        .wr_data_i(data_input_internal),
+        .wdata_i(data_input_internal),
         .mem_block_en_i(memory_bank_we),
         .wr_en_i(WE_in),
-        .rd_data_o(data_output_ram_internal)
+        .rdata_o(data_output_ram_internal)
     );
 
     //Reset Logic
