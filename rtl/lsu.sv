@@ -7,7 +7,8 @@ module lsu #(
     parameter ADDRESS_SPACE = 4096, // DEPTH * NUM_MEM_BLOCKS
     parameter NUM_DATA_TYPES = 6,
     parameter GPIO_A_ADDR = 12'hEF0,
-    parameter GPIO_B_ADDR = 12'hEF4
+    parameter GPIO_B_ADDR = 12'hEF4,
+    parameter string RAM_INIT_PATH[4] = {"", "", "", ""}
 )(
     // Inputs
     input wire clk,
@@ -39,7 +40,9 @@ module lsu #(
     wire [DATA_WIDTH-1:0] data_output_ram_internal;
 
     // Instatiating the RAM
-    ram ram_ip (
+    ram #(
+        .RAM_INIT_PATH(RAM_INIT_PATH)
+    ) ram_ip (
         .clk(clk),
         .addr_i(addr_in),
         .wdata_i(data_input_internal),
