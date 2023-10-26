@@ -7,6 +7,7 @@ VERIF = ./verif/
 LSU = $(RTL)lsu.sv
 LSU_TB_FILE = tb_lsu
 LSU_TB = $(VERIF)$(LSU_TB_FILE).sv
+RAM_PARAMS = ../mem/params/ram_params.sv
 RAM = ../mem/rtl/ram.sv
 MEM = ../mem/rtl/memblock.sv
 LSU_TB_OUTPUT = $(OUT_DIR)$(XSIM_DIR)work/$(LSU_TB_FILE).sdb
@@ -33,7 +34,7 @@ all: $(VCD)
 
 $(VCD): $(LSU) $(LSU_TB) $(RAM MEM)
 	# Building the xsim.dir, Directory
-	$(VLOG_CC) $(VLOG_CC_OPTIONS) $(LSU) $(LSU_TB) $(RAM) $(MEM)
+	$(VLOG_CC) $(VLOG_CC_OPTIONS) $(LSU) $(LSU_TB) $(RAM_PARAMS) $(RAM) $(MEM)
 
 	# Moving the files into a temporary directory
 	mkdir -p $(OUT_DIR)
