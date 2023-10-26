@@ -61,7 +61,7 @@ module lsu #(
     end
 
     // Determining When to Write to GPIO
-    always_ff @(posedge clk) begin
+    always_ff @(negedge clk) begin
         if(!reset_n) begin
             gpioA_out <= '0;
             gpioB_out <= '0;
