@@ -22,7 +22,7 @@ module lsu #(
 
     // In Outs
     output reg [DATA_WIDTH-1:0] gpioA_out,
-    output reg [DATA_WIDTH-1:0] gpioB_out
+    input  reg [DATA_WIDTH-1:0] gpioB_in
 );
     // Defining the different DTYPES
     `define BYTE               3'b000
@@ -53,7 +53,10 @@ module lsu #(
         if(!reset_n) begin
             data_out <= '0;
         end else begin
-            data_out <= data_output_internal;
+            case(addr_in)
+                GPIO_B_ADDR: data_out <= gpioB_in;
+                default: data_out <= data_output_internal;
+            endcase
         end
     end
 
@@ -61,12 +64,10 @@ module lsu #(
     always_ff @(negedge clk) begin
         if(!reset_n) begin
             gpioA_out <= '0;
-            gpioB_out <= '0;
         end else begin
             if(WE_in) begin
             case(addr_in)
                 GPIO_A_ADDR: gpioA_out <= data_in;
-                GPIO_B_ADDR: gpioB_out <= data_in;
             endcase
         end
         end
