@@ -24,7 +24,7 @@ module tb_lsu #(
     reg reset_n;
     reg [DATA_WIDTH-1:0] data_out;
     reg [DATA_WIDTH-1:0] gpioA_out;
-    reg [DATA_WIDTH-1:0] gpioB_out;
+    reg [DATA_WIDTH-1:0] gpioB_in;
 
     // Instatiating the LSU
     lsu #(
@@ -42,7 +42,7 @@ module tb_lsu #(
         .reset_n(reset_n),
         .data_out(data_out),
         .gpioA_out(gpioA_out),
-        .gpioB_out(gpioB_out)
+        .gpioB_in(gpioB_in)
     );
 
     // Functions
@@ -84,6 +84,7 @@ module tb_lsu #(
         // Setting Initial Conditions (For input signals)
         addr = '0;
         data_in = '0;
+        gpioB_in = '0;
         we_in = 1'b0;
         dtypes = `FULL_WORD;
 
